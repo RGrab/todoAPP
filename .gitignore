@@ -1,3 +1,4 @@
-!/.mvn/wrapper/maven-wrapper.jar
+*.jar
 target/
 dependency-reduced-pom.xml
+!/.mvn/wrapper/maven-wrapper.jar
