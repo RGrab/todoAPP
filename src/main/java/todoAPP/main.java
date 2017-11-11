@@ -8,6 +8,5 @@ public class main {
 
   public static void main(String[] args){
     connection = new DatabaseConnection("com.mysql.jdbc.Driver", "jdbc:mysql://localhost:3306/todoAPP?useSSL=false", "user", "password");
-    System.out.println("DONE!");
   }
 }

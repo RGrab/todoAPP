@@ -15,11 +15,22 @@ import java.util.EmptyStackException;
 
 public class DatabaseConnection {
 
-  private static Connection connection;
-
   public DatabaseConnection(String driver, String url, String username, String password){
     try{
       makeConnection(driver, url, username, password);
+      System.out.println("Connected to \"" + url +"\".");
+      System.out.println("logged in as \"" + username +"\".");
+    }catch(ClassNotFoundException e){
+      e.printStackTrace();
+    }catch(SQLException e){
+      e.printStackTrace();
+    }
+  }
+
+  public DatabaseConnection(String driver, String url){
+    try{
+      makeConnection(driver, url, null, null);
+      System.out.println("Connected to \"" + url +"\".");
     }catch(ClassNotFoundException e){
       e.printStackTrace();
     }catch(SQLException e){
@@ -81,7 +92,7 @@ public class DatabaseConnection {
     }
   }
 
-  public static List<Map<String, Object>> map(ResultSet resultSet) throws SQLException{
+  private static List<Map<String, Object>> map(ResultSet resultSet) throws SQLException{
 
     List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
 
