@@ -16,32 +16,113 @@ public class TodoFront{
 
   public TodoFront(){
 
+    connection = new DatabaseConnection("com.mysql.jdbc.Driver", "jdbc:mysql://localhost:3306/todoAPP?useSSL=false", "user", "password");
+
     String[] loginMenuString = {"Login", "Create Login", "Quit"};
     loginMenu = new MenuFactory(loginMenuString);
-
-    String[] todoMenuString = {"List Todo items", "Make Todo items", "Remove Todo Item", "Back"};
-    todoMenu = new MenuFactory(todoMenuString);
 
     String[] mainMenuString = {"Todo Menu","Messages Menu", "Logout"};
     mainMenu = new MenuFactory(mainMenuString);
 
+    String[] todoMenuString = {"List Todo items", "Make Todo items", "Remove Todo Item", "Back"};
+    todoMenu = new MenuFactory(todoMenuString);
+
     String[] messageMenuString = {"See All Messages", "View Unread Messages", "Make Message", "Remove Message", "Back"};
     messageMenu = new MenuFactory(messageMenuString);
 
-    connection = new DatabaseConnection("com.mysql.jdbc.Driver", "jdbc:mysql://localhost:3306/todoAPP?useSSL=false", "user", "password");
-
-    loginMenu.display();
-    System.out.println(loginMenu.choose());
-
-    mainMenu.display();
-    System.out.println(mainMenu.choose());
-
-    todoMenu.display();
-    System.out.println(todoMenu.choose());
-
-    messageMenu.display();
-    System.out.println(messageMenu.choose());
-
+    login();
 
   }
+
+  public void login(){
+
+    loginMenu.display();
+
+    switch(loginMenu.choose()){
+      case "Login" :
+        mainMenu();
+        break;
+      case "Create Login" :
+        mainMenu();
+        break;
+      case "Quit" :
+        break;
+      default :
+        System.out.println("Not an option : Try Again");
+        break;
+    }
+  }
+
+  public void mainMenu(){
+
+    mainMenu.display();
+
+    switch(mainMenu.choose()){
+      case "Todo Menu" :
+        todo();
+        break;
+      case "Messages Menu" :
+        message();
+        break;
+      case "Logout" :
+        login();
+        break;
+      default :
+        System.out.println("Not an option : Try Again");
+        break;
+
+    }
+  }
+
+  public void todo(){
+
+    todoMenu.display();
+
+    switch(todoMenu.choose()){
+      case "List Todo items" :
+        todo();
+        break;
+      case "Make Todo items" :
+        todo();
+        break;
+      case "Remove Todo Item" :
+        todo();
+        break;
+      case "Back" :
+        mainMenu();
+        break;
+      default :
+        System.out.println("Not an option : Try Again");
+        break;
+
+    }
+  }
+
+  public void message(){
+
+    messageMenu.display();
+
+    switch(messageMenu.choose()){
+      case "See All Messages" :
+        message();
+        break;
+      case "View Unread Messages" :
+        message();
+        break;
+      case "Make Message" :
+        message();
+        break;
+      case "Remove Message" :
+        message();
+        break;
+      case "Back" :
+        mainMenu();
+        break;
+      default :
+        System.out.println("Not an option : Try Again");
+        break;
+
+    }
+  }
+
 }
