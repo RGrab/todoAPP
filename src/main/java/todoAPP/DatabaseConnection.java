@@ -19,7 +19,7 @@ public class DatabaseConnection {
 
   public DatabaseConnection(String driver, String url, String username, String password){
     try{
-      makeConnection(driver, url, username, password);
+      connection = makeConnection(driver, url, username, password);
     }catch(ClassNotFoundException e){
       e.printStackTrace();
     }catch(SQLException e){
@@ -103,5 +103,9 @@ public class DatabaseConnection {
       close(resultSet);
     }
     return results;
+  }
+
+  public Connection getConnection(){
+    return this.connection;
   }
 }

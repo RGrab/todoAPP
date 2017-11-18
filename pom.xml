@@ -7,6 +7,11 @@
     <packaging>jar</packaging>
     <version>0.0.1</version>
 
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
     <dependencies>
 
       <dependency>
@@ -27,6 +32,12 @@
         <version>1.2.17</version>
       </dependency>
 
+      <dependency>
+          <groupId>org.mindrot</groupId>
+          <artifactId>jbcrypt</artifactId>
+          <version>0.3m</version>
+      </dependency>
+
     </dependencies>
 
     <build>
@@ -34,7 +45,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -45,7 +56,7 @@
                             <transformers>
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>todoAPP.main</mainClass>
+                                    <mainClass>todoAPP.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
