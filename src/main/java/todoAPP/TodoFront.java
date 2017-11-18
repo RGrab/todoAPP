@@ -37,7 +37,7 @@ public class TodoFront{
     String[] mainMenuString = {"Todo Menu","Messages Menu", "Logout"};
     mainMenu = new MenuFactory(mainMenuString);
 
-    String[] todoMenuString = {"List Todo items", "Make Todo items", "Remove Todo Item", "Back"};
+    String[] todoMenuString = {"List Todo items", "List Todo items (not complete only)", "Make Todo items", "Remove Todo Item", "Back"};
     todoMenu = new MenuFactory(todoMenuString);
 
     String[] messageMenuString = {"See All Messages", "View Unread Messages", "Make Message", "Remove Message", "Back"};
@@ -52,43 +52,60 @@ public class TodoFront{
     loginMenu.display();
 
     switch(loginMenu.choose()){
+
       case "Login" :
 
         try{
+
           currentUser = loginDB();
+
           if(this.currentUser != null){
             mainMenu();
           }else{
+
             System.out.println("not logged in try again.");
             login();
+
           }
         }catch (SQLException e){
+
           System.out.println("Error while logging in.");
           logger.error("TodoFront.login", e);
           login();
+
         }
 
       break;
+
       case "Create Login" :
 
         try{
+
           crateUserDB();
+
           if(this.currentUser != null){
             mainMenu();
           }else{
+
             System.out.println("not logged in try again.");
             login();
+
           }
+
         }catch (SQLException e){
+
           System.out.println("Error while creating new user.");
           logger.error("TodoFront.login", e);
           login();
+
         }
 
       break;
+
       case "Quit" :
         //by do nothing program exits.
       break;
+
       default :
         System.out.println("Not an option : Try Again");
       break;
@@ -100,18 +117,22 @@ public class TodoFront{
     mainMenu.display();
 
     switch(mainMenu.choose()){
+
       case "Todo Menu" :
         todo();
-        break;
+      break;
+
       case "Messages Menu" :
         message();
-        break;
+      break;
+
       case "Logout" :
         login();
-        break;
+      break;
+
       default :
         System.out.println("Not an option : Try Again");
-        break;
+      break;
 
     }
   }
@@ -121,21 +142,54 @@ public class TodoFront{
     todoMenu.display();
 
     switch(todoMenu.choose()){
+
       case "List Todo items" :
-        todo();
-        break;
+
+        try{
+
+          displayTodoDB(false);
+
+        }catch (SQLException e){
+
+          System.out.println("Error while displaying todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
+
+      break;
+
+      case "List Todo items (not complete only)" :
+
+        try{
+          displayTodoDB(true);
+        }catch (SQLException e){
+
+          System.out.println("Error while displaying todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
+
+      break;
+
       case "Make Todo items" :
         todo();
-        break;
+      break;
+
       case "Remove Todo Item" :
         todo();
-        break;
+      break;
+
       case "Back" :
         mainMenu();
-        break;
+      break;
+
       default :
         System.out.println("Not an option : Try Again");
-        break;
+      break;
 
     }
   }
@@ -145,24 +199,30 @@ public class TodoFront{
     messageMenu.display();
 
     switch(messageMenu.choose()){
+
       case "See All Messages" :
         message();
-        break;
+      break;
+
       case "View Unread Messages" :
         message();
-        break;
+      break;
+
       case "Make Message" :
         message();
-        break;
+      break;
+
       case "Remove Message" :
         message();
-        break;
+      break;
+
       case "Back" :
         mainMenu();
-        break;
+      break;
+
       default :
         System.out.println("Not an option : Try Again");
-        break;
+      break;
 
     }
   }
@@ -182,6 +242,7 @@ public class TodoFront{
     loginPS.setString(1, userName);
     ResultSet result = loginPS.executeQuery();
 
+    //checkse that both the user exists and the password matches the stored passwordHash.
     if(result.next() && BCrypt.checkpw(passwordPlainTxt, result.getString("passwordHash"))){
       System.out.println("logged in as " + userName);
       return userName;
@@ -219,11 +280,47 @@ public class TodoFront{
     this.currentUser = userName;
   }
 
-  private void displayTodoDB(){
-    PreparedStatement todoListPS = connection.getConnection().PreparedStatement("SELECT todo.contents, todo.status, todo.priority " +
-    "FROM todo " +
-    "JOIN user ON user.userID = todo.ID " +
-    "WHERE userName = ?");
-  }
+  private void displayTodoDB(Boolean status)throws SQLException{
 
+    String todoListString = "SELECT todo.status, todo.priority, todo.contents " +
+      "FROM todo " +
+      "JOIN user ON user.userID = todo.userID " +
+      "WHERE user.userName = ? ";
+
+    //to select only todos that are not complete.
+    if(status){
+      todoListString += "AND todo.priority = 0";
+    }
+
+    PreparedStatement todoListPS = connection.getConnection().prepareStatement(todoListString);
+
+    todoListPS.setString(1, currentUser);
+    ResultSet result = todoListPS.executeQuery();
+
+    // to get total ammount of todos.
+    result.last();
+    int total = result.getRow();
+    System.out.println(total + " Todos.");
+
+    //checks to see if there are any todos to display.
+    if(total > 0){
+
+      //reset pointer back to the first row of result.
+      result.beforeFirst();
+
+      //column names.
+      System.out.printf("%-8s %-8s %-7s \n", "Complete", "Priority", "Conents");
+
+      //printing each todo
+      while(result.next()){
+
+        String todoStatus = (result.getBoolean("todo.status")) ? "Yes" : "No";
+        System.out.printf("%-8s %-8d %-255s \n", todoStatus, result.getInt("todo.priority"), result.getString("todo.contents"));
+
+      }
+    }
+    else{
+      System.out.println("No todos to display");
+    }
+  }
 }
