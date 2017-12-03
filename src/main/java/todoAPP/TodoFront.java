@@ -289,7 +289,7 @@ public class TodoFront{
 
     //to select only todos that are not complete.
     if(status){
-      todoListString += "AND todo.priority = 0";
+      todoListString += "AND todo.status = 0";
     }
 
     PreparedStatement todoListPS = connection.getConnection().prepareStatement(todoListString);
@@ -323,4 +323,12 @@ public class TodoFront{
       System.out.println("No todos to display");
     }
   }
+
+  private void makeTodoItemDB()throws SQLException{
+
+    String makeTodoString = "INSERT INTO todo (userID,contents,status,priority)
+    VALUES ()";
+
+  }
+
 }
