@@ -20,7 +20,8 @@ public class TodoFront{
 
   static DatabaseConnection connection;
 
-  private String currentUser = null;
+  private String currentUserName;
+  private Integer currentUserID;
 
   private MenuFactory todoMenu;
   private MenuFactory mainMenu;
@@ -50,29 +51,25 @@ public class TodoFront{
   private void login(){
 
     loginMenu.display();
-
     switch(loginMenu.choose()){
 
       case "Login" :
 
         try{
+          loginDB();
 
-          currentUser = loginDB();
-
-          if(this.currentUser != null){
+          if(this.currentUserID != null){
             mainMenu();
-          }else{
-
+          }
+          else{
             System.out.println("not logged in try again.");
             login();
-
           }
-        }catch (SQLException e){
 
+        }catch (SQLException e){
           System.out.println("Error while logging in.");
           logger.error("TodoFront.login", e);
           login();
-
         }
 
       break;
@@ -80,20 +77,16 @@ public class TodoFront{
       case "Create Login" :
 
         try{
-
           crateUserDB();
 
-          if(this.currentUser != null){
+          if(this.currentUserID != null){
             mainMenu();
           }else{
-
             System.out.println("not logged in try again.");
             login();
-
           }
 
         }catch (SQLException e){
-
           System.out.println("Error while creating new user.");
           logger.error("TodoFront.login", e);
           login();
@@ -115,7 +108,6 @@ public class TodoFront{
   private void mainMenu(){
 
     mainMenu.display();
-
     switch(mainMenu.choose()){
 
       case "Todo Menu" :
@@ -140,17 +132,14 @@ public class TodoFront{
   private void todo(){
 
     todoMenu.display();
-
     switch(todoMenu.choose()){
 
       case "List Todo items" :
 
         try{
-
           displayTodoDB(false);
 
         }catch (SQLException e){
-
           System.out.println("Error while displaying todo.");
           logger.error("TodoFront.todo", e);
 
@@ -164,8 +153,8 @@ public class TodoFront{
 
         try{
           displayTodoDB(true);
-        }catch (SQLException e){
 
+        }catch (SQLException e){
           System.out.println("Error while displaying todo.");
           logger.error("TodoFront.todo", e);
 
@@ -176,7 +165,18 @@ public class TodoFront{
       break;
 
       case "Make Todo items" :
-        todo();
+
+        try{
+          makeTodoItemDB();
+
+        }catch (SQLException e){
+          System.out.println("Error while making todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
+
       break;
 
       case "Remove Todo Item" :
@@ -195,7 +195,6 @@ public class TodoFront{
   }
 
   private void message(){
-
     messageMenu.display();
 
     switch(messageMenu.choose()){
@@ -227,7 +226,7 @@ public class TodoFront{
     }
   }
 
-  private String loginDB() throws SQLException{
+  private void loginDB() throws SQLException{
 
     System.out.println("Enter user name");
     String userName = keyboard.nextLine();
@@ -235,7 +234,7 @@ public class TodoFront{
     System.out.println("Enter password");
     String passwordPlainTxt = keyboard.nextLine();
 
-    PreparedStatement loginPS = this.connection.getConnection().prepareStatement("SELECT userName, passwordHash " +
+    PreparedStatement loginPS = this.connection.getConnection().prepareStatement("SELECT userID, userName, passwordHash " +
       " FROM user " +
       " WHERE userName = ?");
 
@@ -245,11 +244,11 @@ public class TodoFront{
     //checkse that both the user exists and the password matches the stored passwordHash.
     if(result.next() && BCrypt.checkpw(passwordPlainTxt, result.getString("passwordHash"))){
       System.out.println("logged in as " + userName);
-      return userName;
+      this.currentUserName = result.getString("userName");
+      this.currentUserID = result.getInt("userID");
     }
     else{
       System.out.println("invalid username or password!");
-      return null;
     }
   }
 
@@ -277,7 +276,7 @@ public class TodoFront{
 
     createUserPS.executeUpdate();
 
-    this.currentUser = userName;
+    this.currentUserName = userName;
   }
 
   private void displayTodoDB(Boolean status)throws SQLException{
@@ -294,7 +293,7 @@ public class TodoFront{
 
     PreparedStatement todoListPS = connection.getConnection().prepareStatement(todoListString);
 
-    todoListPS.setString(1, currentUser);
+    todoListPS.setString(1, currentUserName);
     ResultSet result = todoListPS.executeQuery();
 
     // to get total ammount of todos.
@@ -326,9 +325,60 @@ public class TodoFront{
 
   private void makeTodoItemDB()throws SQLException{
 
-    String makeTodoString = "INSERT INTO todo (userID,contents,status,priority)
-    VALUES ()";
+    String tempInput;
 
+    String makeTodoString = "INSERT INTO todo (userID,contents,status,priority) VALUES (?,?,?,?)";
+    PreparedStatement makeTodoPS = connection.getConnection().prepareStatement(makeTodoString);
+
+    makeTodoPS.setInt(1, this.currentUserID);
+
+    System.out.println("Enter todo contents (255 char)");
+    tempInput = keyboard.nextLine();
+    makeTodoPS.setString(2, tempInput);
+
+    do{
+
+      System.out.println("Enter status (N = not completed / C = completed)");
+      tempInput = keyboard.nextLine();
+      tempInput = tempInput.replaceAll("\\s+","");
+      tempInput = tempInput.toUpperCase();
+
+      if(tempInput.equals("N")){
+        makeTodoPS.setBoolean(3, false);
+      }
+      else if(tempInput.equals("C")){
+        makeTodoPS.setBoolean(3, true);
+      }
+      else{
+        System.out.println("not a valid status!");
+      }
+    }while(!tempInput.equals("N") && !tempInput.equals("C"));
+
+    System.out.println("Enter priority (0-9, 0 = most important)");
+
+    int tmpInt = 0;
+    Boolean flag = false;
+    // insist proper priority is entered.
+    while((flag = !keyboard.hasNextInt()) || (tmpInt = keyboard.nextInt()) < 0 || tmpInt > 9){
+      if(flag){
+        tempInput = keyboard.next();
+      }
+        System.out.println("incorrect priority input!");
+        System.out.println("Enter priority (0-9, 0 = most important)");
+        flag = false;
+    }
+
+    int priority = tmpInt;
+    makeTodoPS.setInt(4, priority);
+
+    // state > 0 = sucsessful INSERT.
+    if(makeTodoPS.executeUpdate() > 0){
+      System.out.println("making todo sucsessful");
+    }
+    else{
+      System.out.println("making todo Unsucsessful");
+    }
+    tempInput = keyboard.next();
   }
 
 }
