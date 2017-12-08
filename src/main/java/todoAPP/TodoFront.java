@@ -180,7 +180,16 @@ public class TodoFront{
       break;
 
       case "Remove Todo Item" :
-        todo();
+        try{
+          removeTodoItemDB();
+
+        }catch (SQLException e){
+          System.out.println("Error while removing todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
       break;
 
       case "Back" :
@@ -281,7 +290,7 @@ public class TodoFront{
 
   private void displayTodoDB(Boolean status)throws SQLException{
 
-    String todoListString = "SELECT todo.status, todo.priority, todo.contents " +
+    String todoListString = "SELECT todo.ID, todo.status, todo.priority, todo.contents " +
       "FROM todo " +
       "JOIN user ON user.userID = todo.userID " +
       "WHERE user.userName = ? ";
@@ -307,14 +316,16 @@ public class TodoFront{
       //reset pointer back to the first row of result.
       result.beforeFirst();
 
+      System.out.println("here");
+
       //column names.
-      System.out.printf("%-8s %-8s %-7s \n", "Complete", "Priority", "Conents");
+      System.out.println( "ID\tComplete\tPriority\tConents");
 
       //printing each todo
       while(result.next()){
 
         String todoStatus = (result.getBoolean("todo.status")) ? "Yes" : "No";
-        System.out.printf("%-8s %-8d %-255s \n", todoStatus, result.getInt("todo.priority"), result.getString("todo.contents"));
+        System.out.println(result.getInt("todo.ID") + "\t" + todoStatus  + "\t\t" + result.getInt("todo.priority") + "\t\t" + result.getString("todo.contents"));
 
       }
     }
@@ -357,15 +368,11 @@ public class TodoFront{
     System.out.println("Enter priority (0-9, 0 = most important)");
 
     int tmpInt = 0;
-    Boolean flag = false;
     // insist proper priority is entered.
-    while((flag = !keyboard.hasNextInt()) || (tmpInt = keyboard.nextInt()) < 0 || tmpInt > 9){
-      if(flag){
+    while(!keyboard.hasNextInt() || (tmpInt = keyboard.nextInt()) < 0 || tmpInt > 9){
         tempInput = keyboard.next();
-      }
         System.out.println("incorrect priority input!");
         System.out.println("Enter priority (0-9, 0 = most important)");
-        flag = false;
     }
 
     int priority = tmpInt;
@@ -378,7 +385,32 @@ public class TodoFront{
     else{
       System.out.println("making todo Unsucsessful");
     }
-    tempInput = keyboard.next();
   }
 
+  private void removeTodoItemDB()throws SQLException{
+    String tempInput;
+
+    System.out.println("Enter ID of todo to delete.");
+
+    String deleteTodoStringPS = "DELETE FROM todo WHERE userID = ? and ID = ?";
+    PreparedStatement makeTodoPS = connection.getConnection().prepareStatement(deleteTodoStringPS);
+
+    makeTodoPS.setInt(1, this.currentUserID);
+
+    while(!keyboard.hasNextInt()){
+      tempInput = keyboard.next();
+      System.out.println("not a valid todo ID");
+      System.out.println("Enter ID of todo to delete.");
+    }
+
+    makeTodoPS.setInt(2, keyboard.nextInt());
+
+    // state > 0 sucsessful delete.
+    if(makeTodoPS.executeUpdate() > 0){
+      System.out.println("delete todo sucsessful");
+    }
+    else{
+      System.out.println("delete todo Unsucsessful");
+    }
+  }
 }
