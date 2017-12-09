@@ -316,8 +316,6 @@ public class TodoFront{
       //reset pointer back to the first row of result.
       result.beforeFirst();
 
-      System.out.println("here");
-
       //column names.
       System.out.println( "ID\tComplete\tPriority\tConents");
 
@@ -393,9 +391,9 @@ public class TodoFront{
     System.out.println("Enter ID of todo to delete.");
 
     String deleteTodoStringPS = "DELETE FROM todo WHERE userID = ? and ID = ?";
-    PreparedStatement makeTodoPS = connection.getConnection().prepareStatement(deleteTodoStringPS);
+    PreparedStatement deleteTodoPS = connection.getConnection().prepareStatement(deleteTodoStringPS);
 
-    makeTodoPS.setInt(1, this.currentUserID);
+    deleteTodoPS.setInt(1, this.currentUserID);
 
     while(!keyboard.hasNextInt()){
       tempInput = keyboard.next();
@@ -403,14 +401,135 @@ public class TodoFront{
       System.out.println("Enter ID of todo to delete.");
     }
 
-    makeTodoPS.setInt(2, keyboard.nextInt());
+    deleteTodoPS.setInt(2, keyboard.nextInt());
 
     // state > 0 sucsessful delete.
-    if(makeTodoPS.executeUpdate() > 0){
+    if(deleteTodoPS.executeUpdate() > 0){
       System.out.println("delete todo sucsessful");
     }
     else{
-      System.out.println("delete todo Unsucsessful");
+      System.out.println("delete todo unsucsessful");
+    }
+  }
+
+  private void viewMessages(Boolean status)throws SQLException{
+      String viewMessageStringPS = "SELECT messages.ID, toUser.userName, fromUser.userName, messages.message , messages.seen " +
+      "FROM messages JOIN user toUser ON toUser.userID = messages.toID "+
+      "JOIN user fromUser ON fromUser.userID = messages.fromID " +
+      "WHERE messages.toID = ? ";
+
+        if(status){
+          viewMessageStringPS = viewMessageStringPS + "AND messages.seen = 0";
+        }
+
+        PreparedStatement viewMessagePS = connection.getConnection().prepareStatement(viewMessageStringPS);
+        viewMessagePS.setInt(1, this.currentUserID);
+
+        ResultSet result = viewMessagePS.executeQuery();
+
+        // to get total ammount of todos.
+        result.last();
+        int total = result.getRow();
+        System.out.println(total + " Messages.");
+
+        //checks to see if there are any todos to display.
+        if(total > 0){
+
+          //reset pointer back to the first row of result.
+          result.beforeFirst();
+
+          //column names.
+          System.out.println("message ID\tFrom\tTo\tMessage");
+
+          //printing each todo
+          while(result.next()){
+
+            String messageSeen = (result.getBoolean("messages.status")) ? "read" : "unread";
+            System.out.println(result.getInt("messages.ID") + "\t" + result.getString("fromUser.userName") + "\t" + result.getString("toUser.userName") + "\t\t" + result.getString("messages.message") +"\t"+ messageSeen);
+
+          }
+        }
+        else{
+          System.out.println("No todos to display");
+        }
+  }
+
+  private void makeMessageDB(){
+    int toUserID;
+    String message;
+    String makeMessageStringPS = "INSERT INTO messages (fromID,toID,message,seen) VALUES(?,?,?,?)";
+    PreparedStatement makeMessagePS = connection.getConnection().prepareStatement(makeMessageStringPS);
+    makeMessagePS.setInt(1, this.currentUserID);
+
+    String toUserName;
+    ResultSet userset;
+    do{
+      System.out.println("To: (user name)");
+      toUserName = keyboard.nextLine();
+
+      //checking to see if user exists
+      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName FROM user WHERE userID = ?");
+      getuserIDPS.setInt(1, this.currentUserID);
+
+      userset = getuserIDPS.executeQuery();
+
+      //checking user exists
+      userset.last();
+      if(userset.getRow() == 0){
+        System.out.println("user does not exist");
+      }
+      else{
+        userset.beforeFirst();
+        toUserID = userset.getInt("userID");
+      }
+    }while(userset.getRow() == 0);
+
+    makeMessagePS.setInt(2, toUserID);
+
+    do{
+      System.out.println("Message : (255 char limit)");
+      message = keyboard.nextLine();
+      if(message.length() > 255){
+        System.out.println("message too long.");
+      }
+    }while(message.length() >  255);
+
+    makeMessagePS.setString(3, message);
+    makeMessagePS.setBoolean(4, false);
+
+    // state > 0 sucsessful delete.
+    if(makeMessagePS.executeUpdate() > 0){
+      System.out.println("make message sucsessful");
+    }
+    else{
+      System.out.println("make message unsucsessful");
+    }
+  }
+
+  private void removeMessageDB(){
+    String tempInput;
+
+    System.out.println("Enter ID of message to delete.");
+
+    String deleteMessageStringPS = "DELETE FROM messages WHERE userID = ? and ID = ?";
+    PreparedStatement deleteMessagePS = connection.getConnection().prepareStatement(deleteTodoStringPS);
+
+    deleteMessagePS.setInt(1, this.currentUserID);
+
+    while(!keyboard.hasNextInt()){
+      tempInput = keyboard.next();
+      System.out.println("not a valid todo ID");
+      System.out.println("Enter ID of message to delete.");
+    }
+
+    deleteMessagePS.setInt(2, keyboard.nextInt());
+
+    // state > 0 sucsessful delete.
+    if(deleteMessagePS.executeUpdate() > 0){
+      System.out.println("delete message sucsessful");
+    }
+    else{
+      System.out.println("delete message unsucsessful");
     }
   }
 }
