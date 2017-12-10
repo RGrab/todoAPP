@@ -70,6 +70,8 @@ private Set<String> menuSet = new HashSet<String>();
     }
     while(true){
       String choice = keyboard.nextLine();
+      keyboard.nextLine();
+      
       if(menuSet.contains(choice)){
         return choice;
       }else{

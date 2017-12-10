@@ -20,7 +20,8 @@ public class TodoFront{
 
   static DatabaseConnection connection;
 
-  private String currentUser = null;
+  private String currentUserName;
+  private Integer currentUserID;
 
   private MenuFactory todoMenu;
   private MenuFactory mainMenu;
@@ -50,29 +51,25 @@ public class TodoFront{
   private void login(){
 
     loginMenu.display();
-
     switch(loginMenu.choose()){
 
       case "Login" :
 
         try{
+          loginDB();
 
-          currentUser = loginDB();
-
-          if(this.currentUser != null){
+          if(this.currentUserID != null){
             mainMenu();
-          }else{
-
+          }
+          else{
             System.out.println("not logged in try again.");
             login();
-
           }
-        }catch (SQLException e){
 
+        }catch (SQLException e){
           System.out.println("Error while logging in.");
           logger.error("TodoFront.login", e);
           login();
-
         }
 
       break;
@@ -80,20 +77,16 @@ public class TodoFront{
       case "Create Login" :
 
         try{
-
           crateUserDB();
 
-          if(this.currentUser != null){
+          if(this.currentUserID != null){
             mainMenu();
           }else{
-
             System.out.println("not logged in try again.");
             login();
-
           }
 
         }catch (SQLException e){
-
           System.out.println("Error while creating new user.");
           logger.error("TodoFront.login", e);
           login();
@@ -115,7 +108,6 @@ public class TodoFront{
   private void mainMenu(){
 
     mainMenu.display();
-
     switch(mainMenu.choose()){
 
       case "Todo Menu" :
@@ -140,17 +132,14 @@ public class TodoFront{
   private void todo(){
 
     todoMenu.display();
-
     switch(todoMenu.choose()){
 
       case "List Todo items" :
 
         try{
-
           displayTodoDB(false);
 
         }catch (SQLException e){
-
           System.out.println("Error while displaying todo.");
           logger.error("TodoFront.todo", e);
 
@@ -164,8 +153,8 @@ public class TodoFront{
 
         try{
           displayTodoDB(true);
-        }catch (SQLException e){
 
+        }catch (SQLException e){
           System.out.println("Error while displaying todo.");
           logger.error("TodoFront.todo", e);
 
@@ -176,11 +165,31 @@ public class TodoFront{
       break;
 
       case "Make Todo items" :
-        todo();
+
+        try{
+          makeTodoItemDB();
+
+        }catch (SQLException e){
+          System.out.println("Error while making todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
+
       break;
 
       case "Remove Todo Item" :
-        todo();
+        try{
+          removeTodoItemDB();
+
+        }catch (SQLException e){
+          System.out.println("Error while removing todo.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          todo();
+        }
       break;
 
       case "Back" :
@@ -195,29 +204,64 @@ public class TodoFront{
   }
 
   private void message(){
-
     messageMenu.display();
 
     switch(messageMenu.choose()){
 
       case "See All Messages" :
-        message();
+        try{
+          viewMessages(false);
+
+        }catch (SQLException e){
+          System.out.println("Error viewing messages.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "View Unread Messages" :
-        message();
+        try{
+          viewMessages(true);
+
+        }catch (SQLException e){
+          System.out.println("Error viewing messages.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Make Message" :
-        message();
+        try{
+          makeMessageDB();
+
+        }catch (SQLException e){
+          System.out.println("Error making message.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Remove Message" :
-        message();
+        try{
+          removeMessageDB();
+
+        }catch (SQLException e){
+          System.out.println("Error removing message.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Back" :
-        mainMenu();
+
       break;
 
       default :
@@ -227,7 +271,7 @@ public class TodoFront{
     }
   }
 
-  private String loginDB() throws SQLException{
+  private void loginDB() throws SQLException{
 
     System.out.println("Enter user name");
     String userName = keyboard.nextLine();
@@ -235,7 +279,7 @@ public class TodoFront{
     System.out.println("Enter password");
     String passwordPlainTxt = keyboard.nextLine();
 
-    PreparedStatement loginPS = this.connection.getConnection().prepareStatement("SELECT userName, passwordHash " +
+    PreparedStatement loginPS = this.connection.getConnection().prepareStatement("SELECT userID, userName, passwordHash " +
       " FROM user " +
       " WHERE userName = ?");
 
@@ -245,11 +289,11 @@ public class TodoFront{
     //checkse that both the user exists and the password matches the stored passwordHash.
     if(result.next() && BCrypt.checkpw(passwordPlainTxt, result.getString("passwordHash"))){
       System.out.println("logged in as " + userName);
-      return userName;
+      this.currentUserName = result.getString("userName");
+      this.currentUserID = result.getInt("userID");
     }
     else{
       System.out.println("invalid username or password!");
-      return null;
     }
   }
 
@@ -277,24 +321,24 @@ public class TodoFront{
 
     createUserPS.executeUpdate();
 
-    this.currentUser = userName;
+    this.currentUserName = userName;
   }
 
   private void displayTodoDB(Boolean status)throws SQLException{
 
-    String todoListString = "SELECT todo.status, todo.priority, todo.contents " +
+    String todoListString = "SELECT todo.ID, todo.status, todo.priority, todo.contents " +
       "FROM todo " +
       "JOIN user ON user.userID = todo.userID " +
       "WHERE user.userName = ? ";
 
     //to select only todos that are not complete.
     if(status){
-      todoListString += "AND todo.priority = 0";
+      todoListString += "AND todo.status = 0";
     }
 
     PreparedStatement todoListPS = connection.getConnection().prepareStatement(todoListString);
 
-    todoListPS.setString(1, currentUser);
+    todoListPS.setString(1, currentUserName);
     ResultSet result = todoListPS.executeQuery();
 
     // to get total ammount of todos.
@@ -309,18 +353,219 @@ public class TodoFront{
       result.beforeFirst();
 
       //column names.
-      System.out.printf("%-8s %-8s %-7s \n", "Complete", "Priority", "Conents");
+      System.out.println( "ID\tComplete\tPriority\tConents");
 
       //printing each todo
       while(result.next()){
 
         String todoStatus = (result.getBoolean("todo.status")) ? "Yes" : "No";
-        System.out.printf("%-8s %-8d %-255s \n", todoStatus, result.getInt("todo.priority"), result.getString("todo.contents"));
+        System.out.println(result.getInt("todo.ID") + "\t" + todoStatus  + "\t\t" + result.getInt("todo.priority") + "\t\t" + result.getString("todo.contents"));
 
       }
     }
     else{
       System.out.println("No todos to display");
+    }
+  }
+
+  private void makeTodoItemDB()throws SQLException{
+
+    String tempInput;
+
+    String makeTodoString = "INSERT INTO todo (userID,contents,status,priority) VALUES (?,?,?,?)";
+    PreparedStatement makeTodoPS = connection.getConnection().prepareStatement(makeTodoString);
+
+    makeTodoPS.setInt(1, this.currentUserID);
+
+    System.out.println("Enter todo contents (255 char)");
+    tempInput = keyboard.nextLine();
+    makeTodoPS.setString(2, tempInput);
+
+    do{
+
+      System.out.println("Enter status (N = not completed / C = completed)");
+      tempInput = keyboard.nextLine();
+      tempInput = tempInput.replaceAll("\\s+","");
+      tempInput = tempInput.toUpperCase();
+
+      if(tempInput.equals("N")){
+        makeTodoPS.setBoolean(3, false);
+      }
+      else if(tempInput.equals("C")){
+        makeTodoPS.setBoolean(3, true);
+      }
+      else{
+        System.out.println("not a valid status!");
+      }
+    }while(!tempInput.equals("N") && !tempInput.equals("C"));
+
+    System.out.println("Enter priority (0-9, 0 = most important)");
+
+    int tmpInt = 0;
+    // insist proper priority is entered.
+    while(!keyboard.hasNextInt() || (tmpInt = keyboard.nextInt()) < 0 || tmpInt > 9){
+        tempInput = keyboard.next();
+        System.out.println("incorrect priority input!");
+        System.out.println("Enter priority (0-9, 0 = most important)");
+    }
+
+    int priority = tmpInt;
+    makeTodoPS.setInt(4, priority);
+
+    // state > 0 = sucsessful INSERT.
+    if(makeTodoPS.executeUpdate() > 0){
+      System.out.println("making todo sucsessful");
+    }
+    else{
+      System.out.println("making todo Unsucsessful");
+    }
+  }
+
+  private void removeTodoItemDB()throws SQLException{
+    String tempInput;
+
+    System.out.println("Enter ID of todo to delete.");
+
+    String deleteTodoStringPS = "DELETE FROM todo WHERE userID = ? and ID = ?";
+    PreparedStatement deleteTodoPS = connection.getConnection().prepareStatement(deleteTodoStringPS);
+
+    deleteTodoPS.setInt(1, this.currentUserID);
+
+    while(!keyboard.hasNextInt()){
+      tempInput = keyboard.next();
+      System.out.println("not a valid todo ID");
+      System.out.println("Enter ID of todo to delete.");
+    }
+
+    deleteTodoPS.setInt(2, keyboard.nextInt());
+
+    // state > 0 sucsessful delete.
+    if(deleteTodoPS.executeUpdate() > 0){
+      System.out.println("delete todo sucsessful");
+    }
+    else{
+      System.out.println("delete todo unsucsessful");
+    }
+  }
+
+  private void viewMessages(Boolean status)throws SQLException{
+      String viewMessageStringPS = "SELECT messages.ID, toUser.userName, fromUser.userName, messages.message , messages.seen " +
+      "FROM messages JOIN user toUser ON toUser.userID = messages.toID "+
+      "JOIN user fromUser ON fromUser.userID = messages.fromID " +
+      "WHERE messages.toID = ? ";
+
+        if(status){
+          viewMessageStringPS = viewMessageStringPS + "AND messages.seen = 0";
+        }
+
+        PreparedStatement viewMessagePS = connection.getConnection().prepareStatement(viewMessageStringPS);
+        viewMessagePS.setInt(1, this.currentUserID);
+
+        ResultSet result = viewMessagePS.executeQuery();
+
+        // to get total ammount of todos.
+        result.last();
+        int total = result.getRow();
+        System.out.println(total + " Messages.");
+
+        //checks to see if there are any todos to display.
+        if(total > 0){
+
+          //reset pointer back to the first row of result.
+          result.beforeFirst();
+
+          //column names.
+          System.out.println("ID\tFrom\tTo\tMessage");
+
+          //printing each todo
+          while(result.next()){
+
+            String messageSeen = (result.getBoolean("messages.seen")) ? "read" : "unread";
+            System.out.println(result.getInt("messages.ID") + "\t" + result.getString("fromUser.userName") + "\t" + result.getString("toUser.userName") + "\t\t" + result.getString("messages.message") +"\t"+ messageSeen);
+
+          }
+        }
+        else{
+          System.out.println("No messages to display");
+        }
+  }
+
+  private void makeMessageDB()throws SQLException{
+    int toUserID = 0;
+    String message;
+    String makeMessageStringPS = "INSERT INTO messages (fromID,toID,message,seen) VALUES(?,?,?,?)";
+    PreparedStatement makeMessagePS = connection.getConnection().prepareStatement(makeMessageStringPS);
+    makeMessagePS.setInt(1, this.currentUserID);
+
+    String toUserName;
+    ResultSet userset;
+    do{
+      System.out.println("To: (user name)");
+      toUserName = keyboard.nextLine();
+
+      //checking to see if user exists
+      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName, userID FROM user WHERE userID = ?");
+      getuserIDPS.setInt(1, this.currentUserID);
+
+      userset = getuserIDPS.executeQuery();
+
+      //checking user exists
+      userset.last();
+      if(userset.getRow() == 0){
+        System.out.println("user does not exist");
+      }
+      else{
+        userset.first();
+        toUserID = userset.getInt("userID");
+      }
+    }while(userset.getRow() == 0);
+
+    makeMessagePS.setInt(2, toUserID);
+
+    do{
+      System.out.println("Message : (255 char limit)");
+      message = keyboard.nextLine();
+      if(message.length() > 255){
+        System.out.println("message too long.");
+      }
+    }while(message.length() >  255);
+
+    makeMessagePS.setString(3, message);
+    makeMessagePS.setBoolean(4, false);
+
+    // state > 0 sucsessful delete.
+    if(makeMessagePS.executeUpdate() > 0){
+      System.out.println("make message sucsessful");
+    }
+    else{
+      System.out.println("make message unsucsessful");
+    }
+  }
+
+  private void removeMessageDB()throws SQLException{
+    String tempInput;
+
+    System.out.println("Enter ID of message to delete.");
+
+    String deleteMessageStringPS = "DELETE FROM messages WHERE userID = ? and ID = ?";
+    PreparedStatement deleteMessagePS = connection.getConnection().prepareStatement(deleteMessageStringPS);
+
+    deleteMessagePS.setInt(1, this.currentUserID);
+
+    while(!keyboard.hasNextInt()){
+      tempInput = keyboard.next();
+      System.out.println("not a valid todo ID");
+      System.out.println("Enter ID of message to delete.");
+    }
+
+    deleteMessagePS.setInt(2, keyboard.nextInt());
+
+    // state > 0 sucsessful delete.
+    if(deleteMessagePS.executeUpdate() > 0){
+      System.out.println("delete message sucsessful");
+    }
+    else{
+      System.out.println("delete message unsucsessful");
     }
   }
 }
