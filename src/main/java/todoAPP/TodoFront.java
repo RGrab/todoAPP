@@ -209,23 +209,59 @@ public class TodoFront{
     switch(messageMenu.choose()){
 
       case "See All Messages" :
-        message();
+        try{
+          viewMessages(false);
+
+        }catch (SQLException e){
+          System.out.println("Error viewing messages.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "View Unread Messages" :
-        message();
+        try{
+          viewMessages(true);
+
+        }catch (SQLException e){
+          System.out.println("Error viewing messages.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Make Message" :
-        message();
+        try{
+          makeMessageDB();
+
+        }catch (SQLException e){
+          System.out.println("Error making message.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Remove Message" :
-        message();
+        try{
+          removeMessageDB();
+
+        }catch (SQLException e){
+          System.out.println("Error removing message.");
+          logger.error("TodoFront.todo", e);
+
+        }finally{
+          message();
+        }
       break;
 
       case "Back" :
-        mainMenu();
+
       break;
 
       default :
@@ -439,23 +475,23 @@ public class TodoFront{
           result.beforeFirst();
 
           //column names.
-          System.out.println("message ID\tFrom\tTo\tMessage");
+          System.out.println("ID\tFrom\tTo\tMessage");
 
           //printing each todo
           while(result.next()){
 
-            String messageSeen = (result.getBoolean("messages.status")) ? "read" : "unread";
+            String messageSeen = (result.getBoolean("messages.seen")) ? "read" : "unread";
             System.out.println(result.getInt("messages.ID") + "\t" + result.getString("fromUser.userName") + "\t" + result.getString("toUser.userName") + "\t\t" + result.getString("messages.message") +"\t"+ messageSeen);
 
           }
         }
         else{
-          System.out.println("No todos to display");
+          System.out.println("No messages to display");
         }
   }
 
-  private void makeMessageDB(){
-    int toUserID;
+  private void makeMessageDB()throws SQLException{
+    int toUserID = 0;
     String message;
     String makeMessageStringPS = "INSERT INTO messages (fromID,toID,message,seen) VALUES(?,?,?,?)";
     PreparedStatement makeMessagePS = connection.getConnection().prepareStatement(makeMessageStringPS);
@@ -468,7 +504,7 @@ public class TodoFront{
       toUserName = keyboard.nextLine();
 
       //checking to see if user exists
-      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName FROM user WHERE userID = ?");
+      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName, userID FROM user WHERE userID = ?");
       getuserIDPS.setInt(1, this.currentUserID);
 
       userset = getuserIDPS.executeQuery();
@@ -479,7 +515,7 @@ public class TodoFront{
         System.out.println("user does not exist");
       }
       else{
-        userset.beforeFirst();
+        userset.first();
         toUserID = userset.getInt("userID");
       }
     }while(userset.getRow() == 0);
@@ -506,13 +542,13 @@ public class TodoFront{
     }
   }
 
-  private void removeMessageDB(){
+  private void removeMessageDB()throws SQLException{
     String tempInput;
 
     System.out.println("Enter ID of message to delete.");
 
     String deleteMessageStringPS = "DELETE FROM messages WHERE userID = ? and ID = ?";
-    PreparedStatement deleteMessagePS = connection.getConnection().prepareStatement(deleteTodoStringPS);
+    PreparedStatement deleteMessagePS = connection.getConnection().prepareStatement(deleteMessageStringPS);
 
     deleteMessagePS.setInt(1, this.currentUserID);
 
