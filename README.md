@@ -3,7 +3,7 @@
 ##### Prerequisites
 * [Install Java](https://www.java.com/en/download/help/download_options.xml)
 * mySql
-  * [Install MySql Community Server](https://dev.mysql.com/downloads/mysql/)
+  * [MySql Community Server](https://dev.mysql.com/downloads/mysql/)
   * [MySQL Connectors](https://dev.mysql.com/downloads/connector/j/) 
 * [Install Maven](https://maven.apache.org/download.cgi)
 * Install Packages.
