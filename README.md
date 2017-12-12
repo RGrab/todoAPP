@@ -13,7 +13,7 @@
     * download and unzip the archive and place the mysql-connector-java-5.1.45-bin.jar file in root
     of the project directory.
 ### Installing the app
-1. Import the database.
+1. Import the database (localhost port:3306).
    * log into mysql console on command line.
    * run `-u <username> -p <databasename> < <PATH TO DBtodoAPP.sql> `
       * this file is found in the database directory that is located in the projects root directory
