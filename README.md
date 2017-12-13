@@ -28,7 +28,7 @@
         * Enter username.
         * Enter password.
     * Enter 2 to create new user.  
-    ![3](https://imgur.com/ovtocuE.png)
+    ![3](https://imgur.com/Db8iuGJ.png)
         * Enter in new username (less than 16 characters).
         * Enter in new password (less than __ characters).
         * Enter 3 to exit the app.
