@@ -21,8 +21,8 @@
     * run "mvn insall" from root directory in command line.
 3. From the project root navigate to the directory named "target" and run ` java -jar todoAPP-0.0.1.jar" `.
 ### Using the app
-1. Login Menu.
- ![1](https://imgur.com/ovtocuE.png)
+1. Login Menu:
+![1](https://imgur.com/ovtocuE.png)
     * Enter 1 to login.
     ![login menu](https://imgur.com/z4z1OX3.png)
         * Enter username.
