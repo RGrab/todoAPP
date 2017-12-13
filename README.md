@@ -23,7 +23,7 @@
 ### Using the app
 1. Login Menu:  
 ![1](https://imgur.com/ovtocuE.png)
-    * Enter 1 to login.
+    * Enter 1 to login.  
     ![2](https://imgur.com/Db8iuGJ.png)
         * Enter username.
         * Enter password.
