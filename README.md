@@ -58,5 +58,5 @@
     ![13](https://imgur.com/ODKbYRU.png)
     * Enter 4 to remove a message.  
     ![14](https://imgur.com/WaI2SCY.png)
-    * Press 5 to return to main menu.
+    * Enter 5 to return to main menu.
 
