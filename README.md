@@ -49,7 +49,7 @@
     ![9](https://imgur.com/GjQlynZ.png)
     * Enter 5 to return to main menu.
 4. Messages Menu:  
-![10](https://imgur.com/ovtocuE.png)
+![10](https://imgur.com/n561JT8.png)
     * Enter 1 to see all of the messages that belong to current user.  
     ![11](https://imgur.com/3bHQe59.png)
     * Enter 2 to see all of the unread messages that belong to the current user.  
