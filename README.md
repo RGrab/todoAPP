@@ -23,12 +23,12 @@
 ### Using the app
 1. Login Menu:  
 ![1](https://imgur.com/ovtocuE.png)
-    * Enter 1 to login.  
-    ![2](https://imgur.com/z4z1OX3.png)
+    * Enter 1 to login.
+    ![2](https://imgur.com/Db8iuGJ.png)
         * Enter username.
         * Enter password.
     * Enter 2 to create new user.  
-    ![3](https://imgur.com/Db8iuGJ.png)
+    ![3](https://imgur.com/z4z1OX3.png)
         * Enter in new username (less than 16 characters).
         * Enter in new password (less than __ characters).
         * Enter 3 to exit the app.
