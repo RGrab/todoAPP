@@ -78,7 +78,6 @@ public class TodoFront{
 
         try{
           crateUserDB();
-
           if(this.currentUserID != null){
             mainMenu();
           }else{
@@ -119,6 +118,7 @@ public class TodoFront{
       break;
 
       case "Logout" :
+        this.currentUserID = null;
         login();
       break;
 
@@ -261,7 +261,7 @@ public class TodoFront{
       break;
 
       case "Back" :
-
+        mainMenu();
       break;
 
       default :
@@ -314,14 +314,27 @@ public class TodoFront{
     PreparedStatement createUserPS = connection.getConnection().prepareStatement("INSERT INTO user(firstName,lastName,userName,passwordHash)" +
       "VALUES(?,?,?,?)");
 
-    createUserPS.setString(1, userName);
+    createUserPS.setString(1, firstName);
     createUserPS.setString(2, lastName);
-    createUserPS.setString(3, firstName);
+    createUserPS.setString(3, userName);
     createUserPS.setString(4, BCrypt.hashpw(passwordPlainTxt, BCrypt.gensalt(13)));
 
     createUserPS.executeUpdate();
 
-    this.currentUserName = userName;
+    PreparedStatement getUserIDPS = connection.getConnection().prepareStatement("SELECT userID FROM user WHERE userName = ?");
+    getUserIDPS.setString(1, userName);
+    ResultSet userId = getUserIDPS.executeQuery();
+
+    userId.last();
+    int total = userId.getRow();
+    if(total > 0){
+      this.currentUserID = userId.getInt("userID");
+    }
+    else{
+      System.out.println("Problem when creating new user");
+    }
+
+
   }
 
   private void displayTodoDB(Boolean status)throws SQLException{
@@ -338,7 +351,7 @@ public class TodoFront{
 
     PreparedStatement todoListPS = connection.getConnection().prepareStatement(todoListString);
 
-    todoListPS.setString(1, currentUserName);
+    todoListPS.setString(1, this.currentUserName);
     ResultSet result = todoListPS.executeQuery();
 
     // to get total ammount of todos.
@@ -504,8 +517,8 @@ public class TodoFront{
       toUserName = keyboard.nextLine();
 
       //checking to see if user exists
-      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName, userID FROM user WHERE userID = ?");
-      getuserIDPS.setInt(1, this.currentUserID);
+      PreparedStatement getuserIDPS = connection.getConnection().prepareStatement("SELECT userName, userID FROM user WHERE userName = ?");
+      getuserIDPS.setString(1, toUserName);
 
       userset = getuserIDPS.executeQuery();
 
@@ -547,7 +560,7 @@ public class TodoFront{
 
     System.out.println("Enter ID of message to delete.");
 
-    String deleteMessageStringPS = "DELETE FROM messages WHERE userID = ? and ID = ?";
+    String deleteMessageStringPS = "DELETE FROM messages WHERE toID = ? and ID = ?";
     PreparedStatement deleteMessagePS = connection.getConnection().prepareStatement(deleteMessageStringPS);
 
     deleteMessagePS.setInt(1, this.currentUserID);
